@@ -1,45 +1,31 @@
 <script>
+    import { onDestroy } from 'svelte';
     import FeedbackForm from './components/FeedbackForm.svelte';
-import FeedbackList from './components/FeedbackList.svelte';
-import FeedbackStat from './components/FeedbackStat.svelte';
+    import FeedbackList from './components/FeedbackList.svelte';
+    import FeedbackStat from './components/FeedbackStat.svelte';
+    import { FeedbackStore } from './store';
 
+    $: count = $FeedbackStore.length;
+    $: average = $FeedbackStore.reduce((a, item) => a + item.rating, 0) / count;
 
-let feedbacks= [
-    {
-    id: '1',
-    rating: 10,
-    text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. consequuntur vel vitae commodi alias voluptatem est voluptatum ipsa quae.',
-  },
-  {
-    id: '2',
-    rating: 9,
-    text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. consequuntur vel vitae commodi alias voluptatem est voluptatum ipsa quae.',
-  }, 
-  {
-    id: '3',
-    rating: 8,
-    text: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. consequuntur vel vitae commodi alias voluptatem est voluptatum ipsa quae.',
-  }
-  ]
+    const deleteFeedback = (e) => {
+        const itemId = e.detail;
+        FeedbackStore.update((currentData) => {
+            return currentData.filter((item) => item.id != itemId);
+        });
+    };
 
-  $:count =  feedbacks.length;
-  $:average = feedbacks.reduce((a,item) => a + item.rating, 0) / count
+    let feedbacks = [];
 
-  const deleteFeedback=(e)=>{
-    const itemId= e.detail;
-    feedbacks = feedbacks.filter((item) => item.id != itemId);
-  }
+    const unsubscribe = FeedbackStore.subscribe((data) => (feedbacks = data));
 
-  const addFeedBack=(e)=>{
-    const newFeedBack = e.detail;
-    feedbacks = [newFeedBack,...feedbacks]
-  }
-
- 
+    onDestroy(() => {
+        unsubscribe();
+    });
 </script>
 
-<main class='container'>
-    <FeedbackForm on:submit-feedback={addFeedBack} />
-    <FeedbackStat count={count} average={average} />
-	<FeedbackList feedbacks={feedbacks} on:delete-feedback={deleteFeedback} />
+<main class="container">
+    <FeedbackForm />
+    <FeedbackStat />
+    <FeedbackList {feedbacks} on:delete-feedback={deleteFeedback} />
 </main>
